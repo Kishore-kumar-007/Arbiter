@@ -67,6 +67,7 @@ class Strategy(BaseModel):
     projected_risk: Optional[float] = None
     resource_consumption: Optional[int] = None
     constraint_violations: List[str] = []
+    score: Optional[float] = None
 
 class DecisionRecord(BaseModel):
     id: str

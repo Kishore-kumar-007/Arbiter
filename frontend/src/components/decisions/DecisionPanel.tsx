@@ -1,29 +1,40 @@
 import React, { useState } from 'react';
 import type { Strategy } from '../../types/domain';
 import { api } from '../../services/api';
+import { decisionStore } from '../../services/decisionStore';
 
 interface Props {
   strategies: Strategy[];
   setStrategies: React.Dispatch<React.SetStateAction<Strategy[]>>;
   selectedStrategyId: string | null;
   onSelectStrategy: (id: string) => void;
-  onGenerate: () => void;
+  onGenerate: () => Promise<Strategy[] | undefined>;
   addEvent: (event: string, details: string) => void;
+  scenarioId?: string;
+  scenarioName?: string;
 }
 
 type Mode = 'STANDBY' | 'ANALYZING' | 'REVIEW' | 'AUTHORIZING' | 'APPROVED' | 'REJECTING' | 'REJECTED' | 'MODIFYING' | 'SIMULATING_MOD';
 
-export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, selectedStrategyId, onSelectStrategy, onGenerate, addEvent }) => {
+export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, selectedStrategyId, onSelectStrategy, onGenerate, addEvent, scenarioId = 'unknown', scenarioName = 'LIVE FEED' }) => {
   const [mode, setMode] = useState<Mode>('STANDBY');
   const [rejectReason, setRejectReason] = useState('');
   const [editableActions, setEditableActions] = useState<any[]>([]);
+  const [currentDecisionId, setCurrentDecisionId] = useState<string | null>(null);
 
   const primary = strategies.find(s => s.id === selectedStrategyId) || null;
   const options = strategies.filter(s => s.id !== selectedStrategyId);
 
   const handleGenerateClick = async () => {
     setMode('ANALYZING');
-    await onGenerate();
+    const generatedStrategies = await onGenerate();
+    
+    if (generatedStrategies && generatedStrategies.length > 0) {
+      const p = generatedStrategies[0];
+      const newDecision = decisionStore.addPendingDecision(scenarioId, scenarioName, p, generatedStrategies);
+      setCurrentDecisionId(newDecision.id);
+    }
+    
     setMode('REVIEW');
   };
 
@@ -33,6 +44,7 @@ export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, sele
     addEvent('Authorizing Decision', `Approving strategy: ${primary.title}`);
     try {
       await api.submitDecision(primary.id, 'APPROVE');
+      if (currentDecisionId) decisionStore.updateDecisionStatus(currentDecisionId, 'APPROVED', 'AUTHORIZE STRATEGY');
       setMode('APPROVED');
       addEvent('Decision Approved', `Strategy executed. System updating.`);
     } catch (e) {
@@ -51,6 +63,7 @@ export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, sele
     addEvent('Submitting Rejection', `Reason: ${rejectReason}`);
     try {
       await api.submitDecision(primary.id, 'REJECT');
+      if (currentDecisionId) decisionStore.updateDecisionStatus(currentDecisionId, 'REJECTED', 'REJECT STRATEGY', rejectReason);
       setMode('REJECTED');
       addEvent('Decision Rejected', 'System awaits new instruction');
     } catch (e) {
@@ -70,11 +83,24 @@ export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, sele
     setMode('SIMULATING_MOD');
     addEvent('Counterfactual Simulation', 'Simulating modified strategy consequences');
     try {
-      const result = await api.simulateWhatIf({});
-      // Mock update to the current strategy
+      const result = await api.simulateScenario({
+        modifications: [],
+        strategy_actions: editableActions
+      });
+      // Mock update to the current strategy based on deterministic result
       if (primary) {
-        const updated = { ...primary, projected_risk: result.new_risk, actions: editableActions };
+        const updated = { 
+          ...primary, 
+          projected_risk: result.projected_risk, 
+          estimated_response_time: result.projected_response_time,
+          resource_consumption: result.projected_resource_usage,
+          constraint_violations: result.constraint_violations,
+          actions: editableActions 
+        };
         setStrategies(strategies.map(s => s.id === primary.id ? updated : s));
+        if (currentDecisionId) {
+          decisionStore.updateDecisionStatus(currentDecisionId, 'MODIFIED', 'MODIFY STRATEGY', null, updated);
+        }
       }
       setMode('REVIEW');
       addEvent('Simulation Complete', 'New deterministic metrics applied');

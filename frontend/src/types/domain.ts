@@ -70,3 +70,54 @@ export interface ScenarioDefinition {
   tags: string[];
   initial_state: AppState;
 }
+
+export type DecisionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'MODIFIED';
+
+export interface DecisionRecord {
+  id: string;
+  scenario_id: string;
+  scenario_name: string;
+  strategy: Strategy;
+  candidate_strategies: Strategy[];
+  status: DecisionStatus;
+  human_action: string | null;
+  timestamp: string;
+  reason: string | null;
+  source: string;
+}
+export type SimulationModificationType = 'block_route' | 'add_incident' | 'increase_population' | 'reduce_capacity' | 'disable_resource';
+
+export interface SimulationModification {
+  type: SimulationModificationType;
+  target_id: string;
+  value?: number;
+  details?: string;
+}
+
+export interface SimulationRequest {
+  modifications: SimulationModification[];
+  strategy_actions: Action[];
+}
+
+export interface SimulationResult {
+  baseline_risk: number;
+  projected_risk: number;
+  risk_delta: number;
+  
+  baseline_response_time: number;
+  projected_response_time: number;
+  response_time_delta: number;
+  
+  baseline_resource_usage: number;
+  projected_resource_usage: number;
+  resource_usage_delta: number;
+  
+  constraint_violations: string[];
+  projected_state: AppState;
+  
+  affected_zones: string[];
+  affected_incidents: string[];
+  affected_resources: string[];
+  
+  simulation_summary: string;
+}

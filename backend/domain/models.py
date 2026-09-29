@@ -86,3 +86,34 @@ class ScenarioDefinition(BaseModel):
     tags: List[str] = []
     initial_state: AppState
 
+class SimulationModification(BaseModel):
+    type: str # block_route, add_incident, increase_population, reduce_capacity, disable_resource
+    target_id: str
+    value: Optional[int] = None
+    details: Optional[str] = None
+
+class SimulationRequest(BaseModel):
+    modifications: List[SimulationModification] = []
+    strategy_actions: List[Action] = []
+
+class SimulationResult(BaseModel):
+    baseline_risk: float
+    projected_risk: float
+    risk_delta: float
+    
+    baseline_response_time: int
+    projected_response_time: int
+    response_time_delta: int
+    
+    baseline_resource_usage: int
+    projected_resource_usage: int
+    resource_usage_delta: int
+    
+    constraint_violations: List[str]
+    projected_state: AppState
+    
+    affected_zones: List[str]
+    affected_incidents: List[str]
+    affected_resources: List[str]
+    
+    simulation_summary: str

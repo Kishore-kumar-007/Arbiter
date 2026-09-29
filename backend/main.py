@@ -48,3 +48,78 @@ def generate_strategies():
     current_state = state_manager.get_state()
     strategies = propose_and_evaluate_strategies(current_state)
     return strategies
+
+from backend.domain.models import SimulationRequest, SimulationResult
+from backend.engine.simulation import apply_modifications, simulate_strategy, calculate_risk
+
+@app.post("/api/simulation/run", response_model=SimulationResult)
+def run_simulation(request: SimulationRequest):
+    baseline_state = state_manager.get_state()
+    
+    # 1. Calculate baseline metrics
+    baseline_risk = calculate_risk(baseline_state)
+    baseline_response_time = 0
+    baseline_resource_usage = 0
+    
+    # 2. Apply modifications
+    mod_state, affected_zones, affected_incidents, affected_resources, mod_violations = apply_modifications(
+        baseline_state, request.modifications
+    )
+    
+    # 3. Apply strategy actions
+    if request.strategy_actions:
+        proj_state, metrics = simulate_strategy(
+            mod_state, 
+            request.strategy_actions,
+            affected_zones=affected_zones,
+            affected_resources=affected_resources,
+            affected_incidents=affected_incidents
+        )
+    else:
+        # Just use modification metrics
+        proj_state = mod_state
+        metrics = {
+            "estimated_response_time": 0,
+            "resource_consumption": 0,
+            "constraint_violations": mod_violations,
+            "projected_risk": calculate_risk(proj_state),
+            "affected_zones": affected_zones,
+            "affected_incidents": affected_incidents,
+            "affected_resources": affected_resources
+        }
+        
+    # Combine violations
+    all_violations = list(set(mod_violations + metrics.get("constraint_violations", [])))
+
+    risk_delta = round(metrics["projected_risk"] - baseline_risk, 2)
+    response_time_delta = metrics["estimated_response_time"] - baseline_response_time
+    resource_usage_delta = metrics["resource_consumption"] - baseline_resource_usage
+    
+    summary = ""
+    if risk_delta > 0:
+        summary = f"Projected risk increases by {risk_delta} points."
+    elif risk_delta < 0:
+        summary = f"Projected risk decreases by {abs(risk_delta)} points."
+    else:
+        summary = "No material change in projected risk."
+        
+    if all_violations:
+        summary += f" Found {len(all_violations)} constraint violations."
+
+    return SimulationResult(
+        baseline_risk=baseline_risk,
+        projected_risk=metrics["projected_risk"],
+        risk_delta=risk_delta,
+        baseline_response_time=baseline_response_time,
+        projected_response_time=metrics["estimated_response_time"],
+        response_time_delta=response_time_delta,
+        baseline_resource_usage=baseline_resource_usage,
+        projected_resource_usage=metrics["resource_consumption"],
+        resource_usage_delta=resource_usage_delta,
+        constraint_violations=all_violations,
+        projected_state=proj_state,
+        affected_zones=metrics.get("affected_zones", []),
+        affected_incidents=metrics.get("affected_incidents", []),
+        affected_resources=metrics.get("affected_resources", []),
+        simulation_summary=summary
+    )

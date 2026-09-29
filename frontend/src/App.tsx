@@ -17,7 +17,7 @@ function App() {
       case 'Overview': return <Overview onTabChange={setActiveTab} />;
       case 'Incidents': return <Incidents />;
       case 'Resources': return <Resources />;
-      case 'Decisions': return <Decisions />;
+      case 'Decisions': return <Decisions onTabChange={setActiveTab} />;
       case 'Simulation': return <Simulation />;
       case 'Audit Trail': return <AuditTrail />;
       default: return <Overview />;

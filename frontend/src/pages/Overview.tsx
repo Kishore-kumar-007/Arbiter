@@ -84,6 +84,7 @@ export const Overview: React.FC<Props> = ({ onTabChange }) => {
         setSelectedStrategyId(data[0].id);
         addEvent('Analysis Complete', `Generated ${data.length} candidate strategies`);
       }
+      return data;
     } catch (err) {
       console.error(err);
       addEvent('Analysis Failed', 'Error communicating with generation service');
@@ -129,6 +130,8 @@ export const Overview: React.FC<Props> = ({ onTabChange }) => {
         onSelectStrategy={setSelectedStrategyId}
         onGenerate={handleGenerate} 
         addEvent={addEvent}
+        scenarioId={selectedScenarioId}
+        scenarioName={scenarios.find(s => s.id === selectedScenarioId)?.name || 'LIVE FEED'}
       />
       <BottomActivityArea trail={trail} />
     </div>

@@ -35,9 +35,14 @@ export const api = {
     return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
   },
 
-  simulateWhatIf: async (modifications: any): Promise<{ new_risk: number, violations: string[] }> => {
-    console.log(`[MOCK API] Simulating what-if`, modifications);
-    return new Promise(resolve => setTimeout(() => resolve({ new_risk: 12.5, violations: [] }), 1200));
+  simulateScenario: async (request: import('../types/domain').SimulationRequest): Promise<import('../types/domain').SimulationResult> => {
+    const res = await fetch('/api/simulation/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    });
+    if (!res.ok) throw new Error('Failed to run simulation');
+    return res.json();
   },
 
   getAuditTrail: async (): Promise<AuditRecord[]> => {

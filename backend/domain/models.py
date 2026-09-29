@@ -76,3 +76,13 @@ class DecisionRecord(BaseModel):
     selected_strategy: Strategy
     human_action: str  # APPROVE, REJECT, MODIFY
     resulting_state: Optional[AppState] = None
+
+class ScenarioDefinition(BaseModel):
+    id: str
+    name: str
+    description: str
+    long_description: Optional[str] = None
+    severity: int
+    tags: List[str] = []
+    initial_state: AppState
+

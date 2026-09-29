@@ -60,3 +60,13 @@ export interface AuditRecord {
   event: string;
   details: string;
 }
+
+export interface ScenarioDefinition {
+  id: string;
+  name: string;
+  description: string;
+  long_description: string | null;
+  severity: number;
+  tags: string[];
+  initial_state: AppState;
+}

@@ -1,4 +1,4 @@
-import type { AppState, Strategy, AuditRecord } from '../types/domain';
+import type { AppState, Strategy, AuditRecord, ScenarioDefinition } from '../types/domain';
 
 // Central API Service connecting to FastAPI backend
 // Mocks unimplemented endpoints for the hackathon demo
@@ -13,6 +13,18 @@ export const api = {
   generateStrategies: async (): Promise<Strategy[]> => {
     const res = await fetch('/api/strategies/generate', { method: 'POST' });
     if (!res.ok) throw new Error('Failed to generate strategies');
+    return res.json();
+  },
+
+  getScenarios: async (): Promise<ScenarioDefinition[]> => {
+    const res = await fetch('/api/scenarios');
+    if (!res.ok) throw new Error('Failed to fetch scenarios');
+    return res.json();
+  },
+
+  loadScenario: async (scenarioId: string): Promise<{ success: boolean }> => {
+    const res = await fetch(`/api/scenarios/${scenarioId}/load`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to load scenario');
     return res.json();
   },
 

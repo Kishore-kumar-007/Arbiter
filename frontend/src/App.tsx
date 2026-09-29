@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './index.css';
 import { TopCommandBar } from './components/layout/TopCommandBar';
 import { LeftSidebar } from './components/layout/LeftSidebar';
@@ -14,7 +14,7 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'Overview': return <Overview />;
+      case 'Overview': return <Overview onTabChange={setActiveTab} />;
       case 'Incidents': return <Incidents />;
       case 'Resources': return <Resources />;
       case 'Decisions': return <Decisions />;
@@ -27,8 +27,10 @@ function App() {
   return (
     <div className="app-container">
       <TopCommandBar />
-      <LeftSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      {renderContent()}
+      <div className="main-body">
+        <LeftSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        {renderContent()}
+      </div>
     </div>
   );
 }

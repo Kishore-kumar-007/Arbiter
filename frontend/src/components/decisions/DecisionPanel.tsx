@@ -4,118 +4,258 @@ import { api } from '../../services/api';
 
 interface Props {
   strategies: Strategy[];
+  setStrategies: React.Dispatch<React.SetStateAction<Strategy[]>>;
+  selectedStrategyId: string | null;
+  onSelectStrategy: (id: string) => void;
   onGenerate: () => void;
-  generating: boolean;
+  addEvent: (event: string, details: string) => void;
 }
 
-export const DecisionPanel: React.FC<Props> = ({ strategies, onGenerate, generating }) => {
-  const [approving, setApproving] = useState<string | null>(null);
+type Mode = 'STANDBY' | 'ANALYZING' | 'REVIEW' | 'AUTHORIZING' | 'APPROVED' | 'REJECTING' | 'REJECTED' | 'MODIFYING' | 'SIMULATING_MOD';
 
-  const handleApprove = async (id: string) => {
-    setApproving(id);
-    await api.submitDecision(id, 'APPROVE');
-    setApproving(null);
-    // Ideally this would refresh the state
-    alert("Decision recorded. System state updated in MVP mock.");
+export const DecisionPanel: React.FC<Props> = ({ strategies, setStrategies, selectedStrategyId, onSelectStrategy, onGenerate, addEvent }) => {
+  const [mode, setMode] = useState<Mode>('STANDBY');
+  const [rejectReason, setRejectReason] = useState('');
+  const [editableActions, setEditableActions] = useState<any[]>([]);
+
+  const primary = strategies.find(s => s.id === selectedStrategyId) || null;
+  const options = strategies.filter(s => s.id !== selectedStrategyId);
+
+  const handleGenerateClick = async () => {
+    setMode('ANALYZING');
+    await onGenerate();
+    setMode('REVIEW');
+  };
+
+  const handleApprove = async () => {
+    if (!primary) return;
+    setMode('AUTHORIZING');
+    addEvent('Authorizing Decision', `Approving strategy: ${primary.title}`);
+    try {
+      await api.submitDecision(primary.id, 'APPROVE');
+      setMode('APPROVED');
+      addEvent('Decision Approved', `Strategy executed. System updating.`);
+    } catch (e) {
+      setMode('REVIEW');
+    }
+  };
+
+  const handleRejectClick = () => {
+    setMode('REJECTING');
+    addEvent('Reject Workflow', 'Operator opened rejection modal');
+  };
+
+  const confirmReject = async () => {
+    if (!primary) return;
+    setMode('AUTHORIZING');
+    addEvent('Submitting Rejection', `Reason: ${rejectReason}`);
+    try {
+      await api.submitDecision(primary.id, 'REJECT');
+      setMode('REJECTED');
+      addEvent('Decision Rejected', 'System awaits new instruction');
+    } catch (e) {
+      setMode('REVIEW');
+    }
+  };
+
+  const handleModifyClick = () => {
+    if (primary) {
+      setEditableActions([...primary.actions]);
+    }
+    setMode('MODIFYING');
+    addEvent('Modify Workflow', 'Operator entering modification mode');
+  };
+
+  const simulateMod = async () => {
+    setMode('SIMULATING_MOD');
+    addEvent('Counterfactual Simulation', 'Simulating modified strategy consequences');
+    try {
+      const result = await api.simulateWhatIf({});
+      // Mock update to the current strategy
+      if (primary) {
+        const updated = { ...primary, projected_risk: result.new_risk, actions: editableActions };
+        setStrategies(strategies.map(s => s.id === primary.id ? updated : s));
+      }
+      setMode('REVIEW');
+      addEvent('Simulation Complete', 'New deterministic metrics applied');
+    } catch (e) {
+      setMode('REVIEW');
+    }
   };
 
   return (
-    <div className="panel decision-panel">
-      <div className="panel-header">
+    <div className="panel" style={{ gridColumn: '3', gridRow: '2 / span 2', display: 'flex', flexDirection: 'column' }}>
+      <div className="panel-header" style={{ borderBottomColor: (mode === 'APPROVED' || mode === 'REVIEW') ? 'var(--success)' : mode === 'REJECTED' ? 'var(--hazard)' : 'var(--border)' }}>
         <span>DECISION INTELLIGENCE</span>
-        {strategies.length > 0 ? (
-          <span style={{ color: 'var(--success)' }}>ANALYSIS COMPLETE</span>
-        ) : (
-          <span style={{ color: 'var(--text-muted)' }}>STANDBY</span>
-        )}
+        <span className="mono" style={{ color: mode === 'REVIEW' ? 'var(--success)' : 'var(--text-muted)' }}>
+          {mode === 'ANALYZING' ? 'ANALYZING...' : mode === 'REVIEW' ? 'ANALYSIS COMPLETE' : mode}
+        </span>
       </div>
-      <div className="panel-content" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem' }}>Candidate Strategies</h2>
-            <p className="mono" style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deterministic Evaluation Engine v2.4</p>
-          </div>
-          <button className="btn btn-accent" onClick={onGenerate} disabled={generating}>
-            {generating ? 'ANALYZING...' : 'RUN AI ANALYSIS'}
-          </button>
-        </div>
 
-        {strategies.length === 0 && !generating && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--border-light)', border: '1px dashed var(--border)', borderRadius: 4 }}>
-            Awaiting Situation Analysis Trigger
+      <div className="panel-content" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: 0, overflow: 'hidden' }}>
+        
+        {/* Trigger Area (When Empty) */}
+        {(mode === 'STANDBY' && strategies.length === 0) && (
+          <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '1rem' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Awaiting operator analysis trigger.</span>
+            <button className="btn btn-accent" onClick={handleGenerateClick} style={{ width: '100%' }}>RUN AI ANALYSIS</button>
           </div>
         )}
 
-        {strategies.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto' }}>
-            {strategies.map((strat, idx) => (
-              <div key={strat.id} style={{ 
-                background: 'rgba(0,0,0,0.2)', 
-                border: idx === 0 ? '1px solid var(--accent)' : '1px solid var(--border)',
-                borderRadius: '4px',
-                padding: '1rem',
-                position: 'relative'
-              }}>
-                {idx === 0 && (
-                  <div style={{ position: 'absolute', top: -10, left: 10, background: 'var(--accent)', color: '#000', fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 2 }}>
-                    PRIMARY RECOMMENDATION
-                  </div>
-                )}
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: idx === 0 ? 'var(--accent)' : 'var(--text-main)' }}>{strat.title}</h3>
-                  <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SCORE: {strat.score}</span>
-                </div>
-                
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                  {strat.explanation}
-                </p>
+        {(mode === 'ANALYZING' || mode === 'AUTHORIZING' || mode === 'SIMULATING_MOD') && (
+          <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '1rem' }}>
+            <div className="blink mono" style={{ color: mode === 'AUTHORIZING' ? 'var(--success)' : 'var(--accent)' }}>
+              {mode === 'AUTHORIZING' ? 'PROCESSING DECISION...' : 'COMPUTING...'}
+            </div>
+            <div className="metric-bar" style={{ width: '60%' }}>
+              <div className="metric-fill" style={{ width: '100%', background: mode === 'AUTHORIZING' ? 'var(--success)' : 'var(--accent)', animation: 'blink 1s infinite' }}></div>
+            </div>
+          </div>
+        )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <div style={{ background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: 2, border: '1px solid var(--border)' }}>
-                    <div className="stat-label">Projected Risk</div>
-                    <div className="stat-value" style={{ color: strat.projected_risk! > 10 ? 'var(--warning)' : 'var(--success)' }}>
-                      {strat.projected_risk}
+        {(mode === 'APPROVED' || mode === 'REJECTED') && (
+          <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '1rem' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: mode === 'APPROVED' ? 'var(--success-dark)' : 'var(--hazard-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: mode === 'APPROVED' ? 'var(--success)' : 'var(--hazard)', fontSize: '24px' }}>
+              {mode === 'APPROVED' ? '✓' : '✗'}
+            </div>
+            <h2 style={{ margin: 0 }}>{mode === 'APPROVED' ? 'STRATEGY EXECUTED' : 'STRATEGY REJECTED'}</h2>
+            <button className="btn" onClick={() => setMode('STANDBY')}>RETURN TO STANDBY</button>
+          </div>
+        )}
+
+        {/* Primary Recommendation */}
+        {(mode === 'REVIEW' || mode === 'REJECTING' || mode === 'MODIFYING') && primary && (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderBottom: '1px solid var(--border)' }}>
+              <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 700, letterSpacing: '1px' }}>PRIMARY RECOMMENDATION</span>
+              <h2 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.2rem', color: 'var(--text-main)', fontWeight: 700 }}>{primary.title}</h2>
+              
+              <div style={{ marginTop: '1rem' }}>
+                <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>DETERMINISTIC METRICS</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <div style={{ background: 'var(--bg-base)', border: '1px solid var(--border)', padding: '0.5rem' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Projected Risk</div>
+                    <div className="mono" style={{ fontSize: '1.1rem', color: primary.projected_risk! > 10 ? 'var(--warning)' : 'var(--success)' }}>{primary.projected_risk}</div>
+                  </div>
+                  <div style={{ background: 'var(--bg-base)', border: '1px solid var(--border)', padding: '0.5rem' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Response Time</div>
+                    <div className="mono" style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{primary.estimated_response_time} <span style={{ fontSize: '0.75rem', color:'var(--text-muted)' }}>min</span></div>
+                  </div>
+                  <div style={{ background: 'var(--bg-base)', border: '1px solid var(--border)', padding: '0.5rem' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Resources Used</div>
+                    <div className="mono" style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{primary.resource_consumption}</div>
+                  </div>
+                  <div style={{ background: 'var(--bg-base)', border: '1px solid var(--border)', padding: '0.5rem' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Constraint Status</div>
+                    <div className="mono" style={{ fontSize: '1.1rem', color: primary.constraint_violations.length > 0 ? 'var(--hazard)' : 'var(--success)' }}>
+                      {primary.constraint_violations.length === 0 ? 'PASS' : `${primary.constraint_violations.length} FAIL`}
                     </div>
                   </div>
-                  <div style={{ background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: 2, border: '1px solid var(--border)' }}>
-                    <div className="stat-label">Response Time</div>
-                    <div className="stat-value">{strat.estimated_response_time}u</div>
-                  </div>
-                  <div style={{ background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: 2, border: '1px solid var(--border)' }}>
-                    <div className="stat-label">Resources</div>
-                    <div className="stat-value">{strat.resource_consumption} deployed</div>
-                  </div>
-                  <div style={{ background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: 2, border: '1px solid var(--border)' }}>
-                    <div className="stat-label">AI Confidence</div>
-                    <div className="stat-value">{(strat.confidence * 100).toFixed(0)}%</div>
-                  </div>
-                </div>
-
-                {strat.constraint_violations.length > 0 && (
-                  <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderLeft: '2px solid var(--hazard)', padding: '0.5rem', marginBottom: '1rem', fontSize: '0.75rem', color: '#fca5a5' }}>
-                    <strong>CONSTRAINT VIOLATIONS:</strong>
-                    <ul style={{ margin: '0.25rem 0 0 0', paddingLeft: '1rem' }}>
-                      {strat.constraint_violations.map((v, i) => <li key={i}>{v}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-approve" 
-                    style={{ flex: 1 }} 
-                    onClick={() => handleApprove(strat.id)}
-                    disabled={approving !== null}
-                  >
-                    {approving === strat.id ? 'EXECUTING...' : 'APPROVE'}
-                  </button>
-                  <button className="btn" style={{ flex: 1 }}>MODIFY</button>
-                  <button className="btn btn-reject" style={{ flex: 1 }}>REJECT</button>
                 </div>
               </div>
-            ))}
+
+              {mode === 'REVIEW' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>WHY THIS STRATEGY?</span>
+                  <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.75rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {primary.explanation.split('.').filter(e => e.trim().length > 0).slice(0, 3).map((pt, i) => (
+                      <li key={i}>{pt.trim()}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Editing / Rejecting Interfaces */}
+            {mode === 'REJECTING' && (
+              <div style={{ padding: '1rem', background: 'var(--hazard-dark)', flex: 1 }}>
+                <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--hazard)', fontWeight: 700 }}>REJECTION REASON REQUIRED</span>
+                <textarea 
+                  style={{ width: '100%', marginTop: '0.5rem', background: 'var(--bg-base)', color: 'var(--text-main)', border: '1px solid var(--hazard)', padding: '0.5rem', borderRadius: 2, resize: 'none', height: '80px', fontFamily: 'var(--font-sans)', fontSize: '0.85rem' }} 
+                  placeholder="Enter operational reason for rejection..."
+                  value={rejectReason}
+                  onChange={e => setRejectReason(e.target.value)}
+                ></textarea>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button className="btn btn-reject" style={{ flex: 1 }} onClick={confirmReject}>CONFIRM REJECT</button>
+                  <button className="btn" style={{ flex: 1 }} onClick={() => setMode('REVIEW')}>CANCEL</button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'MODIFYING' && (
+              <div style={{ padding: '1rem', background: 'var(--bg-panel-light)', flex: 1, overflowY: 'auto' }}>
+                <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 700 }}>EDIT STRATEGY ACTIONS</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {editableActions.map((act, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: 'var(--bg-base)', border: '1px solid var(--border)' }}>
+                      <span className="badge" style={{ background: 'var(--border-light)' }}>{act.type}</span>
+                      <span style={{ fontSize: '0.75rem' }}>TGT: {act.target_id}</span>
+                      {act.resource_id && <span style={{ fontSize: '0.75rem' }}>RES: {act.resource_id}</span>}
+                      <button style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--hazard)', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setEditableActions(editableActions.filter((_, idx) => idx !== i))}>×</button>
+                    </div>
+                  ))}
+                  <button 
+                    className="btn" 
+                    style={{ borderStyle: 'dashed' }} 
+                    onClick={() => setEditableActions([...editableActions, { type: 'contain', target_id: 'z2', resource_id: null } as any])}
+                  >
+                    + ADD ACTION
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={simulateMod}>SIMULATE</button>
+                  <button className="btn" style={{ flex: 1 }} onClick={() => setMode('REVIEW')}>CANCEL</button>
+                </div>
+              </div>
+            )}
+
+            {/* Alternatives */}
+            {mode === 'REVIEW' && (
+              <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
+                <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '1px' }}>STRATEGY OPTIONS</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {options.map((opt, i) => (
+                    <div 
+                      key={opt.id} 
+                      onClick={() => {
+                        onSelectStrategy(opt.id);
+                        addEvent('Strategy Selected', `Operator switched view to: ${opt.title}`);
+                      }}
+                      style={{ display: 'flex', padding: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-panel-light)', alignItems: 'center', cursor: 'pointer', transition: 'border 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--text-muted)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                    >
+                      <div style={{ width: '20px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>{String.fromCharCode(66 + i)}</div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>{opt.title}</div>
+                        <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                          <span>Rsk: {opt.projected_risk}</span>
+                          <span>Time: {opt.estimated_response_time}m</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Human Control */}
+            {mode === 'REVIEW' && (
+              <div style={{ padding: '1rem', borderTop: '1px solid var(--border)', background: 'var(--bg-panel)', marginTop: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: 8, height: 8, background: 'var(--warning)', borderRadius: '50%' }} className="blink"></div>
+                  <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--warning)', fontWeight: 700, letterSpacing: '1px' }}>HUMAN DECISION REQUIRED</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <button className="btn btn-approve" style={{ gridColumn: '1 / -1', padding: '0.75rem' }} onClick={handleApprove}>
+                    AUTHORIZE STRATEGY
+                  </button>
+                  <button className="btn btn-modify" onClick={handleModifyClick}>MODIFY</button>
+                  <button className="btn btn-reject" onClick={handleRejectClick}>REJECT</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -596,10 +596,12 @@ export const CampusMap: React.FC<Props> = ({ state, selectedStrategy }) => {
                                 color: inc.type === 'fire' || inc.type === 'blocked_exit' ? 'var(--hazard)' : 'var(--warning)',
                                 border: `1px solid ${inc.type === 'fire' || inc.type === 'blocked_exit' ? 'var(--hazard)' : 'var(--warning)'}`,
                                 cursor: 'pointer',
-                                boxShadow: '0 0 8px rgba(255,23,68,0.3)'
+                                boxShadow: inc.type === 'fire' ? '0 0 8px rgba(239, 68, 68, 0.5)' : '0 0 8px rgba(255,145,0,0.3)',
+                                position: 'relative'
                               }}
                               title={`[SEV ${inc.severity}] ${inc.description}`}
                             >
+                              {inc.type === 'fire' && <div className="map-hazard-ring" style={{ width: '150%', height: '150%', top: '50%', left: '50%' }}></div>}
                               <span>{getIncidentIcon(inc.type)}</span>
                               <span>SEV {inc.severity}</span>
                             </div>

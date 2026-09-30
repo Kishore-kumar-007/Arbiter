@@ -102,7 +102,11 @@ export const Simulation: React.FC = () => {
   };
 
   if (loading || !state) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>INITIALIZING SIMULATION LAB...</div>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>
+        <div className="blink mono" style={{ fontSize: '1.25rem', color: 'var(--accent)', letterSpacing: '2px' }}>INITIALIZING SIMULATION LAB...</div>
+      </div>
+    );
   }
 
   return (
@@ -112,31 +116,51 @@ export const Simulation: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', borderRight: '1px solid var(--border)' }}>
         
         {/* HEADER */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-          <h1 style={{ margin: '0 0 0.25rem 0', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '1px' }}>COUNTERFACTUAL SIMULATION</h1>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>SCENARIO ANALYSIS & PROJECTED CONSEQUENCES</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            <span>CURRENT SCENARIO: <strong style={{ color: 'var(--text-main)' }}>{activeScenario}</strong></span>
-            <span>SYSTEM STATUS: <strong style={{ color: 'var(--success)' }}>OPERATIONAL</strong></span>
-            <span>BASELINE CAPTURE: <strong className="mono" style={{ color: 'var(--text-main)' }}>{captureTime}</strong></span>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel-light)' }}>
+          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ color: 'var(--accent)' }}>⏣</span> COUNTERFACTUAL
+          </h1>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>SCENARIO ANALYSIS & PROJECTED CONSEQUENCES</div>
+          
+          <div className="panel-nested" style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>CURRENT SCENARIO:</span>
+              <strong style={{ color: 'var(--text-main)', letterSpacing: '1px' }}>{activeScenario.toUpperCase()}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>SYSTEM STATUS:</span>
+              <strong style={{ color: 'var(--success)', letterSpacing: '1px' }}>OPERATIONAL</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>BASELINE CAPTURE:</span>
+              <strong className="mono" style={{ color: 'var(--text-main)', letterSpacing: '1px' }}>{captureTime}</strong>
+            </div>
           </div>
         </div>
         
         {/* BUILDER AREA */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', flex: 1, background: 'var(--bg-panel)' }}>
           
           <ModificationBuilder state={state} onAddModification={handleAddModification} />
 
           {/* STRATEGY SELECTION */}
-          <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="panel-nested" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700, letterSpacing: '1px' }}>DECISION ACTIONS (OPTIONAL)</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Select a candidate strategy from the active session to simulate its deterministic outcome.</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>Select a candidate strategy from the active session to simulate its deterministic outcome.</div>
             
             <select 
               className="mono" 
               value={selectedStrategyId || ''} 
               onChange={e => { setSelectedStrategyId(e.target.value || null); setResult(null); }}
-              style={{ padding: '0.4rem', background: 'var(--bg-base)', color: 'var(--text-main)', border: '1px solid var(--border)' }}
+              style={{ 
+                padding: '0.5rem', 
+                background: 'var(--bg-base)', 
+                color: 'var(--text-main)', 
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
             >
               <option value="">-- NO STRATEGY APPLIED --</option>
               {availableStrategies.map(s => (
@@ -160,20 +184,26 @@ export const Simulation: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg-base)' }}>
         
         {!result && !isSimulating && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', gap: '1rem' }}>
-            <div style={{ fontSize: '2rem', color: 'var(--accent)', opacity: 0.5 }}>⏣</div>
-            <div style={{ fontSize: '1.2rem', letterSpacing: '1px' }}>READY</div>
-            <div style={{ fontSize: '0.85rem' }}>BASELINE STATE CAPTURED</div>
-            <div className="mono" style={{ fontSize: '0.85rem' }}>MODIFICATIONS: {modifications.length}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', gap: '1rem', background: 'var(--bg-base)' }}>
+            <div style={{ fontSize: '4rem', color: 'var(--accent)', opacity: 0.15, textShadow: '0 0 20px rgba(0,229,255,0.2)' }}>⏣</div>
+            <div style={{ fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 700, color: 'var(--text-main)' }}>READY FOR SIMULATION</div>
+            <div style={{ fontSize: '0.85rem', letterSpacing: '1px' }}>BASELINE STATE CAPTURED</div>
+            <div className="mono panel-nested" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', marginTop: '1rem', color: modifications.length > 0 ? 'var(--accent)' : 'var(--text-muted)', border: `1px solid ${modifications.length > 0 ? 'var(--accent)' : 'var(--border)'}` }}>MODIFICATIONS LOADED: {modifications.length}</div>
           </div>
         )}
 
         {isSimulating && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1rem' }}>
-            <div className="blink" style={{ fontSize: '1.2rem', color: 'var(--accent)', letterSpacing: '1px', fontFamily: 'var(--font-mono)' }}>SIMULATING COUNTERFACTUAL...</div>
-            <div className="metric-bar" style={{ width: '40%' }}>
-              <div className="metric-fill" style={{ width: '100%', background: 'var(--accent)', animation: 'blink 1s infinite' }}></div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1.5rem', background: 'var(--bg-base)' }}>
+            <div className="blink" style={{ fontSize: '1.2rem', color: 'var(--accent)', letterSpacing: '2px', fontWeight: 700 }}>SIMULATING COUNTERFACTUAL...</div>
+            <div style={{ width: '300px', height: '2px', background: 'var(--border)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', animation: 'radar-sweep 1.5s infinite linear' }}></div>
             </div>
+            <style>{`
+              @keyframes radar-sweep {
+                0% { left: -100%; }
+                100% { left: 100%; }
+              }
+            `}</style>
           </div>
         )}
 

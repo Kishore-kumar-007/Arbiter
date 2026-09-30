@@ -148,7 +148,7 @@ export const Resources: React.FC = () => {
   };
 
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>LOADING RESOURCE TELEMETRY...</div>;
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>INITIALIZING RESOURCE TELEMETRY...</div>;
   }
 
   if (error || !state) {
@@ -170,31 +170,37 @@ export const Resources: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* TOP HEADER */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--bg-panel-light)' }}>
           <div>
-            <h1 style={{ margin: '0 0 0.25rem 0', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '1px' }}>RESOURCE COMMAND</h1>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>RESPONSE CAPACITY & UNIT STATUS</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              <span>ACTIVE SCENARIO: <strong style={{ color: 'var(--text-main)' }}>{currentScenario}</strong></span>
-              <span>SYSTEM STATUS: <strong style={{ color: 'var(--success)' }}>OPERATIONAL</strong></span>
+            <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontWeight: 700, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--accent)' }}>⛊</span> RESOURCE COMMAND
+            </h1>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', letterSpacing: '1px' }}>RESPONSE CAPACITY & UNIT STATUS MATRIX</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-panel-nested)', padding: '0.5rem 1rem', borderRadius: 4, border: '1px solid var(--border)' }}>
+              <span style={{ letterSpacing: '0.5px' }}>ENVIRONMENT: <strong style={{ color: 'var(--text-main)', letterSpacing: '1px' }}>{currentScenario?.toUpperCase()}</strong></span>
+              <div style={{ width: 1, height: '1rem', background: 'var(--border)' }}></div>
+              <span style={{ letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></div>
+                SYSTEM STATUS: <strong style={{ color: 'var(--success)', letterSpacing: '1px' }}>NOMINAL</strong>
+              </span>
             </div>
           </div>
           
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '4px' }}>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>RESOURCE PRESSURE</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ textAlign: 'right', background: 'var(--bg-panel-nested)', padding: '1rem', border: '1px solid var(--border)', borderRadius: '4px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>RESOURCE PRESSURE METRICS</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>{telemetry.available} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>/ {telemetry.total}</span></span>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>AVAILABLE</span>
+                  <span className="mono" style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>{telemetry.available} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>/ {telemetry.total}</span></span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--success)', letterSpacing: '1px', marginTop: '0.2rem' }}>AVAILABLE</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--warning)' }}>{telemetry.deployed} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>/ {telemetry.total}</span></span>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>DEPLOYED</span>
+                  <span className="mono" style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--warning)' }}>{telemetry.deployed} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>/ {telemetry.total}</span></span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--warning)', letterSpacing: '1px', marginTop: '0.2rem' }}>DEPLOYED</span>
                 </div>
-                <div style={{ paddingLeft: '1rem', borderLeft: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: capacityPressure.color }}>{capacityPressure.label}</span>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>NETWORK CAPACITY</span>
+                <div style={{ paddingLeft: '1.5rem', borderLeft: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span className="mono" style={{ fontSize: '1.4rem', fontWeight: 700, color: capacityPressure.color, textShadow: capacityPressure.color === 'var(--hazard)' ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>{capacityPressure.label}</span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '1px', marginTop: '0.2rem' }}>NETWORK CAPACITY</span>
                 </div>
               </div>
             </div>
@@ -202,7 +208,7 @@ export const Resources: React.FC = () => {
         </div>
 
         {/* SUMMARY TELEMETRY STRIP */}
-        <div style={{ display: 'flex', background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', zIndex: 10 }}>
           {[
             { label: 'TOTAL UNITS', count: telemetry.total, color: 'var(--text-main)' },
             { label: 'AVAILABLE', count: telemetry.available, color: 'var(--success)' },
@@ -211,20 +217,20 @@ export const Resources: React.FC = () => {
             { label: 'FIRE', count: telemetry.fire, color: 'var(--hazard)' },
             { label: 'SECURITY', count: telemetry.security, color: 'var(--accent)' },
             { label: 'AVAILABILITY', count: `${telemetry.availPercent}%`, color: capacityPressure.color },
-          ].map(stat => (
-            <div key={stat.label} style={{ flex: 1, padding: '0.75rem 1rem', borderRight: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{stat.label}</span>
-              <span className="mono" style={{ fontSize: '0.9rem', fontWeight: 700, color: stat.color }}>{stat.count}</span>
+          ].map((stat, idx) => (
+            <div key={stat.label} style={{ flex: 1, padding: '0.75rem 1rem', borderRight: idx === 6 ? 'none' : '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '1px' }}>{stat.label}</span>
+              <span className="mono" style={{ fontSize: '1rem', fontWeight: 700, color: stat.color, textShadow: stat.color !== 'var(--text-main)' ? `0 0 10px ${stat.color}40` : 'none' }}>{stat.count}</span>
             </div>
           ))}
         </div>
 
         {/* CONTROLS (Filter, Search, Sort) */}
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', background: 'var(--bg-base)' }}>
           
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             {/* Status Filters */}
-            <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-panel-nested)', padding: '0.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
               {['ALL', 'AVAILABLE', 'DEPLOYED'].map(f => (
                 <button 
                   key={f}
@@ -233,11 +239,13 @@ export const Resources: React.FC = () => {
                     background: statusFilter === f ? 'var(--accent)' : 'transparent',
                     color: statusFilter === f ? '#000' : 'var(--text-main)',
                     border: 'none',
-                    padding: '0.25rem 0.75rem',
+                    padding: '0.35rem 1rem',
                     fontSize: '0.7rem',
-                    fontWeight: statusFilter === f ? 700 : 400,
+                    fontWeight: statusFilter === f ? 700 : 500,
+                    letterSpacing: '0.5px',
                     borderRadius: '2px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
                   }}
                 >
                   {f}
@@ -246,20 +254,22 @@ export const Resources: React.FC = () => {
             </div>
 
             {/* Type Filters */}
-            <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-panel-nested)', padding: '0.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
               {['ALL TYPES', 'MEDICAL', 'FIRE', 'SECURITY'].map(f => (
                 <button 
                   key={f}
                   onClick={() => setTypeFilter(f)}
                   style={{ 
                     background: typeFilter === f ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: 'var(--text-main)',
+                    color: typeFilter === f ? 'var(--text-main)' : 'var(--text-muted)',
                     border: 'none',
-                    padding: '0.25rem 0.75rem',
+                    padding: '0.35rem 1rem',
                     fontSize: '0.7rem',
-                    fontWeight: typeFilter === f ? 700 : 400,
+                    fontWeight: typeFilter === f ? 700 : 500,
+                    letterSpacing: '0.5px',
                     borderRadius: '2px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
                   }}
                 >
                   {f}
@@ -269,33 +279,41 @@ export const Resources: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <input 
-              type="text" 
-              placeholder="SEARCH UNITS..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="mono"
-              style={{
-                background: 'rgba(0,0,0,0.4)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-main)',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.75rem',
-                width: '200px',
-                outline: 'none'
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>⌕</span>
+              <input 
+                type="text" 
+                placeholder="SEARCH UNITS..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="mono"
+                style={{
+                  background: 'var(--bg-panel-nested)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-main)',
+                  padding: '0.5rem 0.75rem 0.5rem 2rem',
+                  fontSize: '0.75rem',
+                  width: '240px',
+                  borderRadius: 4,
+                  outline: 'none',
+                  transition: 'border 0.2s'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+              />
+            </div>
             
             <select 
               value={sort}
               onChange={(e) => setSort(e.target.value as any)}
               className="mono"
               style={{
-                background: 'rgba(0,0,0,0.4)',
+                background: 'var(--bg-panel-nested)',
                 border: '1px solid var(--border)',
                 color: 'var(--text-main)',
-                padding: '0.4rem 0.75rem',
+                padding: '0.5rem 1rem',
                 fontSize: '0.75rem',
+                borderRadius: 4,
                 outline: 'none',
                 cursor: 'pointer'
               }}
@@ -307,39 +325,47 @@ export const Resources: React.FC = () => {
             </select>
 
             <button 
-              className="btn" 
+              className="btn btn-accent" 
               onClick={handleRefresh} 
               disabled={refreshing}
-              style={{ padding: '0.4rem 0.75rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              {refreshing ? 'SYNCHRONIZING...' : 'REFRESH STATE'}
+              {refreshing ? (
+                <><span className="blink">↻</span> SYNCHRONIZING...</>
+              ) : (
+                <><span>↻</span> REFRESH STATE</>
+              )}
             </button>
           </div>
         </div>
 
         {/* MAIN RESOURCE TABLE */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', background: 'var(--bg-base)' }}>
           {processedResources.length === 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
-              EMPTY: No response units available matching criteria.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
+              <div style={{ opacity: 0.3, fontSize: '3rem' }}>⛊</div>
+              <span style={{ letterSpacing: '1px' }}>NO RESOURCES MATCHING CURRENT FILTERS</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {/* Table Header */}
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: '120px 80px 120px 1fr 1fr 100px', 
-                gap: '1rem', 
-                padding: '0 1rem 0.5rem 1rem', 
+                gridTemplateColumns: '120px 100px 140px 1fr 1fr 120px', 
+                gap: '1.5rem', 
+                padding: '0 1rem 0.75rem 1rem', 
                 borderBottom: '1px solid var(--border)',
                 fontSize: '0.65rem',
-                color: 'var(--text-muted)'
+                fontWeight: 700,
+                letterSpacing: '1px',
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase'
               }}>
                 <div>STATUS</div>
-                <div>UNIT</div>
-                <div>TYPE</div>
-                <div>CURRENT LOCATION</div>
-                <div>CURRENT ASSIGNMENT</div>
+                <div>UNIT ID</div>
+                <div>CLASSIFICATION</div>
+                <div>CURRENT SECTOR</div>
+                <div>ACTIVE ASSIGNMENT</div>
                 <div style={{ textAlign: 'right' }}>ACTION</div>
               </div>
 
@@ -355,53 +381,61 @@ export const Resources: React.FC = () => {
                 return (
                   <div 
                     key={res.id}
+                    className="interactive-row panel-nested"
                     onClick={() => setSelectedId(res.id)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '120px 80px 120px 1fr 1fr 100px',
-                      gap: '1rem',
-                      padding: '1rem',
-                      background: isSelected ? 'rgba(0, 229, 255, 0.05)' : 'var(--bg-panel)',
-                      border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                      gridTemplateColumns: '120px 100px 140px 1fr 1fr 120px',
+                      gap: '1.5rem',
+                      padding: '1.25rem 1rem',
+                      background: isSelected ? 'linear-gradient(90deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.02) 100%)' : 'var(--bg-panel)',
+                      border: `1px solid ${isSelected ? 'var(--accent)' : 'transparent'}`,
+                      borderLeft: `3px solid ${isSelected ? 'var(--accent)' : 'transparent'}`,
                       borderRadius: '4px',
                       cursor: 'pointer',
                       alignItems: 'center',
-                      transition: 'all 0.2s ease'
+                      position: 'relative'
                     }}
                   >
                     {/* Status */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: getStatusColor(res.status) }} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: getStatusColor(res.status) }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getStatusColor(res.status), boxShadow: `0 0 8px ${getStatusColor(res.status)}` }} className={res.status !== 'available' ? 'blink' : ''} />
+                      <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: getStatusColor(res.status), letterSpacing: '0.5px' }}>
                         {getStatusLabel(res.status)}
                       </span>
                     </div>
 
                     {/* Unit ID */}
-                    <div className="mono" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    <div className="mono" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '1px' }}>
                       {res.id.toUpperCase()}
                     </div>
 
                     {/* Type */}
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {res.type}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="badge" style={{ background: 'var(--bg-panel-nested)', border: '1px solid var(--border)' }}>{res.type}</span>
                     </div>
 
                     {/* Location */}
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={zone?.name}>
-                      {zone ? zone.name : (res.current_zone_id || 'UNKNOWN')}
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '0.4rem' }} title={zone?.name}>
+                      <span style={{ color: 'var(--text-muted)' }}>📍</span> {zone ? zone.name : (res.current_zone_id || 'UNKNOWN')}
                     </div>
 
                     {/* Assignment */}
-                    <div style={{ fontSize: '0.75rem', fontWeight: res.status === 'available' ? 400 : 700, color: assignmentColor, textTransform: 'uppercase' }}>
+                    <div className="mono" style={{ fontSize: '0.75rem', fontWeight: res.status === 'available' ? 400 : 700, color: assignmentColor, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {assignmentText}
                     </div>
 
                     {/* Action */}
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>
+                      <button className="btn" style={{ 
+                        background: isSelected ? 'var(--accent)' : 'transparent', 
+                        color: isSelected ? '#000' : 'var(--accent)',
+                        borderColor: 'var(--accent)',
+                        padding: '0.4rem 1rem',
+                        fontSize: '0.7rem'
+                      }}>
                         {isSelected ? 'INSPECTING' : 'INSPECT →'}
-                      </span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -413,11 +447,13 @@ export const Resources: React.FC = () => {
 
       {/* RIGHT COLUMN: Resource Details */}
       {selectedResource && (
-        <ResourceDetailPanel 
-          resource={selectedResource} 
-          state={state} 
-          onClose={() => setSelectedId(null)} 
-        />
+        <div style={{ borderLeft: '1px solid var(--border)', background: 'var(--bg-panel-light)', height: '100%', overflowY: 'auto' }}>
+          <ResourceDetailPanel 
+            resource={selectedResource} 
+            state={state} 
+            onClose={() => setSelectedId(null)} 
+          />
+        </div>
       )}
     </div>
   );

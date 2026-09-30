@@ -94,31 +94,41 @@ export const Overview: React.FC<Props> = ({ onTabChange }) => {
   const selectedStrategy = strategies.find(s => s.id === selectedStrategyId) || null;
 
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>INITIALIZING TELEMETRY...</div>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-muted)' }}>
+        <div className="blink mono" style={{ fontSize: '1.25rem', color: 'var(--accent)', letterSpacing: '2px' }}>INITIALIZING TELEMETRY...</div>
+      </div>
+    );
   }
 
   return (
     <div className="overview-workspace">
-      <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '-0.25rem' }}>
-        <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginRight: '0.5rem', fontWeight: 600 }}>Active Scenario:</label>
-        <select 
-          value={selectedScenarioId} 
-          onChange={handleScenarioChange}
-          style={{ 
-            background: 'var(--bg-panel)', 
-            color: 'var(--text-main)', 
-            border: '1px solid var(--border)',
-            padding: '0.25rem 0.5rem',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.8rem',
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          {scenarios.map(s => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+      <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '-0.25rem', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-panel-nested)', border: '1px solid var(--border)', borderRadius: '4px', padding: '0.25rem' }}>
+          <label className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '0 0.75rem', letterSpacing: '1px' }}>ENVIRONMENT</label>
+          <select 
+            value={selectedScenarioId} 
+            onChange={handleScenarioChange}
+            className="mono"
+            style={{ 
+              background: 'var(--bg-panel)', 
+              color: 'var(--accent)', 
+              border: '1px solid var(--border)',
+              padding: '0.3rem 1rem',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              outline: 'none',
+              cursor: 'pointer',
+              borderRadius: '2px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}
+          >
+            {scenarios.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
       <SituationStrip state={state} />
       <IncidentFeed state={state} onTabChange={onTabChange} />

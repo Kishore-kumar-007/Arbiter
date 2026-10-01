@@ -1,14 +1,12 @@
 # Arbiter — Human-in-the-Loop Decision Intelligence
 
-## 1. Recommended Tech Stack
-**Optimize for: CORRECTNESS > ARCHITECTURAL CLARITY > DEMO FEATURES > EXTRA POLISH.**
-
-Given the 24-hour constraint and the need for typed schemas, a deterministic simulation engine, and clean API integration:
+## 1. Core Tech Stack
+**Optimize for: CORRECTNESS > ARCHITECTURAL CLARITY > ROBUST VISUALS.**
 
 *   **Backend**: **Python 3.11+** with **FastAPI**. Python is excellent for logic-heavy simulation engines and has top-tier LLM integration. FastAPI provides automatic OpenAPI documentation and uses Pydantic for robust typed schemas, ensuring the AI outputs conform to our expected data structures.
-*   **Frontend**: **React (Vite)** with **TypeScript**. Ensures a type-safe client that consumes the backend APIs cleanly. Using **Vanilla CSS** for styling to maintain flexibility and clean modularity.
-*   **AI Integration**: Direct API calls (e.g., OpenAI or Google GenAI) structured to return JSON.
-*   **State Management / Persistence**: **In-memory data structures** (Singletons) for the hackathon MVP. We will avoid setting up a database to save time and focus on the vertical slice, but the state will be serializable for easy transition to a DB later.
+*   **Frontend**: **React (Vite)** with **TypeScript**. Ensures a type-safe client that consumes the backend APIs cleanly. Features a custom Vanilla CSS design system optimized for a premium, mission-control aesthetic.
+*   **AI Integration**: Direct API calls structured to return strictly validated JSON.
+*   **State Management**: **In-memory data structures** (Singletons) designed for rapid situational prototyping, structured identically to how they would be persisted in a normalized relational database.
 
 ## 2. Folder Structure
 ```text
@@ -23,11 +21,11 @@ Arbiter/
 │   └── main.py              # Application entry point
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Main views (Dashboard, Simulation View)
+│   │   ├── components/      # Reusable UI components (Command UI)
+│   │   ├── pages/           # Main views (Overview, Decisions, Simulation, Audit)
 │   │   ├── services/        # API clients (fetch to backend)
 │   │   ├── types/           # TypeScript interfaces matching backend models
-│   │   ├── index.css        # Vanilla CSS design system
+│   │   ├── index.css        # Vanilla CSS premium design system
 │   │   └── App.tsx          # Router / Layout
 │   └── package.json
 └── ARCHITECTURE.md
@@ -47,7 +45,7 @@ Arbiter/
 *   `POST /api/incidents` - Inject a new incident to change runtime conditions.
 *   `POST /api/strategies/generate` - Trigger the AI to analyze the state and generate candidate strategies. Returns the strategies *after* they have been simulated and scored by the deterministic engine.
 *   `POST /api/strategies/simulate` - Provide a modified strategy payload. The engine runs a counterfactual simulation and returns the projected consequences without updating the real state.
-*   `POST /api/decisions` - Submit a final decision (Approve/Reject/Modify). Updates the real system state and logs to the audit trail.
+*   `POST /api/decisions` - Submit a final decision (Approve/Reject/Modify). Updates the real system state and logs to the immutable audit trail.
 *   `GET /api/audit-trail` - Fetch the history of human-in-the-loop decisions.
 
 ## 5. State Model
@@ -81,10 +79,9 @@ Once the simulation returns projected states, the scoring engine assigns a numer
 3.  **Output**: The LLM returns structured JSON matching a predefined schema.
 4.  **Handoff**: The AI service parses the JSON into `Strategy` objects. It then passes these raw strategies to the **Simulation Model** and **Scoring Engine** to calculate all numerical fields (risk, time, violations). The LLM's generated metrics (if any) are discarded or used only as a heuristic.
 
-## 9. MVP Implementation Order
-*   **Step 1: Domain Models**: Define the Pydantic schemas in `backend/domain/`.
-*   **Step 2: Core Engine & State**: Implement the in-memory state manager and deterministic simulation/scoring logic.
-*   **Step 3: AI Service**: Implement the LLM API call with structured JSON output parsing. Connect it to the engine.
-*   **Step 4: API Layer**: Expose FastAPI routes.
-*   **Step 5: Frontend Scaffolding**: Setup Vite + React, create basic UI to view the situation and interact with the decision workflow.
-*   **Step 6: Integration & Polish**: Wire the frontend to the backend, ensuring the human-in-the-loop loop works seamlessly.
+## 9. Implementation Phases Completed
+*   **Domain & Core Logic**: Pydantic schemas, deterministic simulation/scoring logic.
+*   **AI Integration**: Structured JSON output parsing, scenario summarization.
+*   **API & State Integration**: FastAPI routes and dynamic state manager.
+*   **Frontend Command UI**: React/Vite implementation of the human-in-the-loop workflow.
+*   **Final Visual Polish**: High-stakes mission control UI applied comprehensively across all surfaces.
